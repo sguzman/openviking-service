@@ -13,6 +13,13 @@ mkdir -p "$HOME/.openviking"
 chmod 700 "$HOME/.openviking"
 
 if [ ! -f "$config" ]; then
+    # Do not enter the known-broken upstream pip installation branch.
+    # Bootstrap provisions local CPU embedding into uv's isolated tool env.
+    command -v uv >/dev/null || fail "uv missing; install uv and rerun bootstrap."
+    tool_python="$(uv tool dir)/openviking/bin/python"
+    if [ ! -x "$tool_python" ] || ! "$tool_python" -c 'from llama_cpp import Llama' >/dev/null 2>&1; then
+        fail "Local CPU embedding dependency missing. Run bash scripts/bootstrap.sh once before using the wizard."
+    fi
     if [ ! -t 0 ] || [ ! -t 1 ]; then
         fail "Provider/model setup needs an interactive terminal. Run bash scripts/activate.sh directly in a terminal (not a background job)."
     fi
