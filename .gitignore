@@ -1,0 +1,15 @@
+# Never commit credentials or memory data.
+.openviking/
+ov.conf
+ovcli.conf
+.env
+.env.*
+!.env.example
+data/
+storage/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+__pycache__/
