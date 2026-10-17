@@ -46,7 +46,7 @@ Run bootstrap in a normal terminal: large package downloads may take much longer
 bash scripts/activate.sh
 ~~~
 
-If ~/.openviking/ov.conf does not exist, this verifies the local CPU embedding dependency is installed, then invokes upstream's official setup wizard. It configures your choice of **both an embedding model and a VLM**, runs `openviking-server doctor`, and only enables/starts the service after validation. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
+If ~/.openviking/ov.conf does not exist, this verifies the local CPU embedding dependency is installed, then invokes upstream's official setup wizard. For an MCP storage/retrieval-only deployment, choose **Lightweight CPU embedding** and **Skip for now** at the VLM step. No ChatGPT/Codex account authorization or separate model API key is required for that mode. OpenViking's VLM-backed document parsing, summary generation and automatic memory extraction will remain unavailable until a VLM is configured. The activation script runs `openviking-server doctor` and accepts the single expected `VLM: FAIL No VLM provider configured` result in embedding-only mode, while refusing to start if any other diagnostic fails. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
 
 Do not guess provider/model names or put credentials in this repository. The upstream wizard supports cloud providers, Codex authentication for the VLM, and Ollama; using Codex for VLM does **not** automatically supply embeddings. Remote providers can have separate costs/quotas, and ChatGPT plan usage is not automatically shared with OpenViking. If you already have an OpenViking configuration, check the resolved storage workspace before starting this systemd unit, especially when it uses a relative path.
 
@@ -103,7 +103,7 @@ Activation re-runs `doctor` and restarts the service. Always back up the data/co
 
 - **Package cannot install:** ensure uv is available and can download a Python 3.13 interpreter/prebuilt OpenViking wheel. Do not install a source toolchain as the first response.
 - **Custom `UV_TOOL_BIN_DIR`:** supported by design. Re-run `bash scripts/bootstrap.sh` to regenerate the stable launcher after changing uv's tool bin directory. Verify the upstream executable with `uv tool dir --bin`.
-- **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun `bash scripts/activate.sh`. Existing ov.conf is preserved. If you saw `No module named pip` at the lightweight CPU embedding step, exit the wizard, pull the updated repository and rerun bootstrap; the installer provisions the CPU wheel beforehand.
+- **Wizard/model setup fails:** choose the actual supported embedding model. You can skip the VLM for now; the service supports embedding-only operation for storage and retrieval. If you later choose to enable VLM-backed functions, configure the provider then rerun `bash scripts/activate.sh`. Existing ov.conf is preserved. If you saw `No module named pip` at the lightweight CPU embedding step, exit the wizard, pull the updated repository and rerun bootstrap; the installer provisions the CPU wheel beforehand.
 - **Port 1933 busy:** stop the other service occupying that port; do not start two writers on the same embedded workspace.
 - **Service runs but /ready fails:** run `openviking-server doctor` (from ~/.openviking), then inspect the user journal.
 - **No server until login:** this is a systemd user service, not a system service.
