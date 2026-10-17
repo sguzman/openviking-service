@@ -1,0 +1,24 @@
+name: validate-service-deployment
+on:
+  push:
+  pull_request:
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        shell: bash
+        run: |
+          bash -n scripts/bootstrap.sh
+          bash -n scripts/activate.sh
+          bash -n scripts/check.sh
+      - name: Unit and security invariants
+        shell: bash
+        run: |
+          grep -Fq 'WorkingDirectory=%h/.openviking' systemd/openviking-service.service
+          grep -Fq -- '--host 127.0.0.1 --port 1933' systemd/openviking-service.service
+          grep -Fq 'UMask=0077' systemd/openviking-service.service
+          grep -Fq 'uv tool install --python 3.13' scripts/bootstrap.sh
+          grep -Fq 'openviking-service.service' scripts/activate.sh
+          grep -Fq 'ov.conf' .gitignore
