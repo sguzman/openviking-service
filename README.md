@@ -36,7 +36,9 @@ If you haven't cloned yet, clone this repository to your preferred projects dire
 
 The installer resolves `uv tool dir --bin` after package installation. It **supports custom `UV_TOOL_BIN_DIR`**, including paths containing spaces. It installs a stable launcher at `~/.local/bin/openviking-service-launcher`; systemd calls that launcher, which executes the actual uv-managed OpenViking binary. This does **not** overwrite or relocate uv's executable.
 
-This is safe to run headlessly: it installs the pinned upstream package, installs the user unit, and **does not** change an existing OpenViking configuration or start the service. Changed preexisting unit files are backed up before replacement.
+Bootstrap installs the pinned upstream package **with its local CPU embedding extra** and uses the upstream llama-cpp-python prebuilt Linux CPU wheel index. It verifies `from llama_cpp import Llama` inside the isolated uv tool environment *before* installing the unit. This bypasses an upstream interactive setup issue: its `pip install "openviking[local-embed]"` branch cannot run because normal uv tool environments do not include pip. The bootstrap deliberately disallows a source build for `llama-cpp-python`, so missing wheels fail explicitly instead of spending an unpredictable amount of time compiling.
+
+Run bootstrap in a normal terminal: large package downloads may take much longer than a Jobflick job timeout. The operation is repeatable, preserves the existing `~/.openviking/ov.conf`, and does **not** start a server until the model configuration is valid. Changed preexisting unit files are backed up before replacement.
 
 **One-time model setup is interactive.** Run the next command in a normal terminal with standard input/output (not Jobflick's non-interactive background command runner):
 
@@ -44,7 +46,7 @@ This is safe to run headlessly: it installs the pinned upstream package, install
 bash scripts/activate.sh
 ~~~
 
-If ~/.openviking/ov.conf does not exist, this invokes upstream's official setup wizard. It configures your choice of **both an embedding model and a VLM**, runs `openviking-server doctor`, and only enables/starts the service after validation. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
+If ~/.openviking/ov.conf does not exist, this verifies the local CPU embedding dependency is installed, then invokes upstream's official setup wizard. It configures your choice of **both an embedding model and a VLM**, runs `openviking-server doctor`, and only enables/starts the service after validation. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
 
 Do not guess provider/model names or put credentials in this repository. The upstream wizard supports cloud providers, Codex authentication for the VLM, and Ollama; using Codex for VLM does **not** automatically supply embeddings. Remote providers can have separate costs/quotas, and ChatGPT plan usage is not automatically shared with OpenViking. If you already have an OpenViking configuration, check the resolved storage workspace before starting this systemd unit, especially when it uses a relative path.
 
@@ -101,7 +103,7 @@ Activation re-runs `doctor` and restarts the service. Always back up the data/co
 
 - **Package cannot install:** ensure uv is available and can download a Python 3.13 interpreter/prebuilt OpenViking wheel. Do not install a source toolchain as the first response.
 - **Custom `UV_TOOL_BIN_DIR`:** supported by design. Re-run `bash scripts/bootstrap.sh` to regenerate the stable launcher after changing uv's tool bin directory. Verify the upstream executable with `uv tool dir --bin`.
-- **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun `bash scripts/activate.sh`. Existing ov.conf is preserved.
+- **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun `bash scripts/activate.sh`. Existing ov.conf is preserved. If you saw `No module named pip` at the lightweight CPU embedding step, exit the wizard, pull the updated repository and rerun bootstrap; the installer provisions the CPU wheel beforehand.
 - **Port 1933 busy:** stop the other service occupying that port; do not start two writers on the same embedded workspace.
 - **Service runs but /ready fails:** run `openviking-server doctor` (from ~/.openviking), then inspect the user journal.
 - **No server until login:** this is a systemd user service, not a system service.
