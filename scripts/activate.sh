@@ -30,7 +30,23 @@ fi
 [ -f "$config" ] || fail "Wizard did not create ~/.openviking/ov.conf."
 chmod 600 "$config"
 printf 'Validating upstream config and model access ...\n'
-( cd "$HOME/.openviking" && "$server" doctor )
+doctor_log="$(mktemp)"
+trap 'rm -f -- "$doctor_log"' EXIT
+if ( cd "$HOME/.openviking" && "$server" doctor ) 2>&1 | tee "$doctor_log"; then
+    :
+else
+    # Upstream doctor 0.5.0 fails for a deliberately skipped VLM, despite the
+    # official wizard offering embedding-only mode. Permit *only* this exact
+    # diagnostic failure; never ignore broken embedding or storage checks.
+    failures="$(grep -Ec ':[[:space:]]+FAIL([[:space:]]|$)' "$doctor_log" || true)"
+    if [ "$failures" -eq 1 ] &&
+       grep -Eq '^[[:space:]]*VLM:[[:space:]]+FAIL[[:space:]]+No VLM provider configured' "$doctor_log" &&
+       grep -Fq '1 check(s) failed.' "$doctor_log"; then
+        printf 'Embedding-only configuration accepted: VLM-dependent features remain unavailable.\n'
+    else
+        fail "OpenViking doctor failed. Resolve all diagnostics except an intentionally absent VLM."
+    fi
+fi
 
 printf 'Enabling and restarting openviking-service.service ...\n'
 systemctl --user enable openviking-service.service
