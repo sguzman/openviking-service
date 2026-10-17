@@ -41,11 +41,11 @@ This is safe to run headlessly: it installs the pinned upstream package, install
 bash scripts/activate.sh
 ~~~
 
-If ~/.openviking/ov.conf does not exist, this invokes upstream's official setup wizard. It configures your choice of **both an embedding model and a VLM**, runs \`openviking-server doctor\`, and only enables/starts the service after validation. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
+If ~/.openviking/ov.conf does not exist, this invokes upstream's official setup wizard. It configures your choice of **both an embedding model and a VLM**, runs `openviking-server doctor`, and only enables/starts the service after validation. If the configuration already exists, the wizard is skipped and your provider choices are preserved.
 
 Do not guess provider/model names or put credentials in this repository. The upstream wizard supports cloud providers, Codex authentication for the VLM, and Ollama; using Codex for VLM does **not** automatically supply embeddings. Remote providers can have separate costs/quotas, and ChatGPT plan usage is not automatically shared with OpenViking. If you already have an OpenViking configuration, check the resolved storage workspace before starting this systemd unit, especially when it uses a relative path.
 
-The wizard and systemd unit both run with ~/.openviking as the working directory. Thus upstream's default \`storage.workspace="./data"\` resolves to **~/.openviking/data** consistently across restarts. An explicit absolute storage.workspace in your existing configuration is honored.
+The wizard and systemd unit both run with ~/.openviking as the working directory. Thus upstream's default `storage.workspace="./data"` resolves to **~/.openviking/data** consistently across restarts. An explicit absolute storage.workspace in your existing configuration is honored.
 
 ### Check status
 
@@ -91,14 +91,14 @@ bash scripts/bootstrap.sh
 bash scripts/activate.sh
 ~~~
 
-Activation re-runs \`doctor\` and restarts the service. Always back up the data/config before upgrading the version. To review current diagnostics without changing state, use \`bash scripts/check.sh\`.
+Activation re-runs `doctor` and restarts the service. Always back up the data/config before upgrading the version. To review current diagnostics without changing state, use `bash scripts/check.sh`.
 
 ### Troubleshooting
 
 - **Package cannot install:** ensure uv is available and can download a Python 3.13 interpreter/prebuilt OpenViking wheel. Do not install a source toolchain as the first response.
-- **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun \`bash scripts/activate.sh\`. Existing ov.conf is preserved.
+- **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun `bash scripts/activate.sh`. Existing ov.conf is preserved.
 - **Port 1933 busy:** stop the other service occupying that port; do not start two writers on the same embedded workspace.
-- **Service runs but /ready fails:** run \`openviking-server doctor\` (from ~/.openviking), then inspect the user journal.
+- **Service runs but /ready fails:** run `openviking-server doctor` (from ~/.openviking), then inspect the user journal.
 - **No server until login:** this is a systemd user service, not a system service.
 - **Other computers cannot connect:** intentional. The service listens on 127.0.0.1; secure remote access is a later deployment phase.
 
