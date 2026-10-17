@@ -3,7 +3,7 @@
 set -euo pipefail
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 [ "$(id -u)" -ne 0 ] || fail "Run as your desktop user."
-server="$HOME/.local/bin/openviking-server"
+server="$HOME/.local/bin/openviking-service-launcher"
 config="$HOME/.openviking/ov.conf"
 unit="$HOME/.config/systemd/user/openviking-service.service"
 [ -x "$server" ] || fail "First run scripts/bootstrap.sh."
