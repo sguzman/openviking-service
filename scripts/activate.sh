@@ -30,7 +30,7 @@ systemctl --user enable openviking-service.service
 systemctl --user restart openviking-service.service
 
 for i in $(seq 1 15); do
-    if curl --fail --silent --output /dev/null --max-time 2 http://127.0.0.1:1933/ready; then
+    if systemctl --user is-active --quiet openviking-service.service && curl --fail --silent --output /dev/null --max-time 2 http://127.0.0.1:1933/ready; then
         printf '\nREADY: http://127.0.0.1:1933/mcp\n'
         printf 'Studio: http://127.0.0.1:1933/studio\n'
         exit 0
