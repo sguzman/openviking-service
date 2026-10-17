@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenViking persistent context database and MCP server
+Documentation=https://docs.openviking.ai/en/guides/03-deployment
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Resolve upstream's default storage.workspace="./data" outside Git.
+WorkingDirectory=%h/.openviking
+ExecStart=%h/.local/bin/openviking-server --config %h/.openviking/ov.conf --host 127.0.0.1 --port 1933
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
