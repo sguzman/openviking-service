@@ -33,6 +33,7 @@ set -euo pipefail
 printf '%s\n' "$*" >> "$TEST_SYSTEMCTL_LOG"
 SYSTEMCTL
 chmod +x "$tmp/fake-bin/uv" "$tmp/fake-bin/systemctl"
+export PATH="$tmp/fake-bin:$PATH"
 
 run_case() {
     local name="$1"
