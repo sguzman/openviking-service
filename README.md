@@ -25,13 +25,16 @@ Prerequisite: uv installed and a working user-level systemd manager. Install uv 
 yay -S --needed uv
 ~~~
 
-Clone and prepare the packaged runtime and unit:
+From an existing checkout, install the packaged runtime and systemd user unit:
 
 ~~~sh
-git clone https://github.com/sguzman/openviking-service.git
-cd openviking-service
+git pull --ff-only
 bash scripts/bootstrap.sh
 ~~~
+
+If you haven't cloned yet, clone this repository to your preferred projects directory first. For the primary developer's workstation the checkout is `~/Code/Service/openviking-service`; do **not** create a duplicate clone in `~/openviking-service`.
+
+The installer resolves `uv tool dir --bin` after package installation. It **supports custom `UV_TOOL_BIN_DIR`**, including paths containing spaces. It installs a stable launcher at `~/.local/bin/openviking-service-launcher`; systemd calls that launcher, which executes the actual uv-managed OpenViking binary. This does **not** overwrite or relocate uv's executable.
 
 This is safe to run headlessly: it installs the pinned upstream package, installs the user unit, and **does not** change an existing OpenViking configuration or start the service. Changed preexisting unit files are backed up before replacement.
 
@@ -75,7 +78,8 @@ Enabled user services launch when the user systemd manager starts (normally at d
 | ~/.openviking/ov.conf | Server configuration and private provider credentials |
 | ~/.openviking/data | Default durable index/resources/memories if storage.workspace is relative |
 | ~/.config/systemd/user/openviking-service.service | Installed user unit |
-| ~/.local/bin/openviking-server | Upstream tool-managed executable |
+| `$(uv tool dir --bin)/openviking-server` | Upstream uv-managed executable (path can be customized) |
+| ~/.local/bin/openviking-service-launcher | Stable locally generated wrapper used by systemd and setup |
 | This Git repository | Only operations scripts, documentation and version pin |
 
 Do not commit the configuration, memory data, backups, or secrets. Back up the **configured storage.workspace** and your private config separately; Git does not back up live memories.
@@ -96,6 +100,7 @@ Activation re-runs `doctor` and restarts the service. Always back up the data/co
 ### Troubleshooting
 
 - **Package cannot install:** ensure uv is available and can download a Python 3.13 interpreter/prebuilt OpenViking wheel. Do not install a source toolchain as the first response.
+- **Custom `UV_TOOL_BIN_DIR`:** supported by design. Re-run `bash scripts/bootstrap.sh` to regenerate the stable launcher after changing uv's tool bin directory. Verify the upstream executable with `uv tool dir --bin`.
 - **Wizard/model setup fails:** choose the actual supported embedding/VLM providers, confirm credentials privately, and rerun `bash scripts/activate.sh`. Existing ov.conf is preserved.
 - **Port 1933 busy:** stop the other service occupying that port; do not start two writers on the same embedded workspace.
 - **Service runs but /ready fails:** run `openviking-server doctor` (from ~/.openviking), then inspect the user journal.
