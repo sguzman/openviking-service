@@ -17,7 +17,10 @@ jobs:
         shell: bash
         run: |
           grep -Fq 'WorkingDirectory=%h/.openviking' systemd/openviking-service.service
-          grep -Fq -- '--host 127.0.0.1 --port 1933' systemd/openviking-service.service
+          grep -Fq 'ExecStart=%h/.local/bin/openviking-service-launcher' systemd/openviking-service.service
+          grep -Fq -- '--host 127.0.0.1 --port 1933' scripts/bootstrap.sh
+          grep -Fq 'uv tool dir --bin' scripts/bootstrap.sh
+          grep -Fq 'scripts/activate.sh' scripts/bootstrap.sh
           grep -Fq 'UMask=0077' systemd/openviking-service.service
           grep -Fq 'uv tool install --upgrade --python 3.13' scripts/bootstrap.sh
           grep -Fq 'openviking-service.service' scripts/activate.sh
