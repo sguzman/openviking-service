@@ -12,7 +12,13 @@ cat > "$tmp/fake-bin/uv" <<'UV'
 set -euo pipefail
 case "$1/$2" in
     tool/install)
-        mkdir -p "$MOCK_UV_BIN"
+        mkdir -p "$MOCK_UV_BIN" "$MOCK_UV_TOOL_DIR/openviking/bin"
+        cat > "$MOCK_UV_TOOL_DIR/openviking/bin/python" <<'PYTHON'
+#!/usr/bin/env bash
+set -euo pipefail
+[ "$1" = "-c" ] && [ "$2" = "from llama_cpp import Llama" ] || exit 12
+PYTHON
+        chmod +x "$MOCK_UV_TOOL_DIR/openviking/bin/python"
         cat > "$MOCK_UV_BIN/openviking-server" <<'SERVER'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -21,8 +27,13 @@ SERVER
         chmod +x "$MOCK_UV_BIN/openviking-server"
         ;;
     tool/dir)
-        [ "$3" = "--bin" ] || exit 4
-        printf '%s\n' "$MOCK_UV_BIN"
+        if [ "${3:-}" = "--bin" ]; then
+            printf '%s\n' "$MOCK_UV_BIN"
+        elif [ "$#" -eq 2 ]; then
+            printf '%s\n' "$MOCK_UV_TOOL_DIR"
+        else
+            exit 4
+        fi
         ;;
     *) echo "Unexpected uv invocation: $*" >&2; exit 5 ;;
 esac
@@ -42,6 +53,7 @@ run_case() {
     export TEST_SYSTEMCTL_LOG="$tmp/$name/systemctl.log"
     export TEST_SERVER_ARGS="$tmp/$name/server-args"
     export MOCK_UV_BIN="$bin"
+    export MOCK_UV_TOOL_DIR="$tmp/$name/uv tools"
     mkdir -p "$HOME"
     bash "$root/scripts/bootstrap.sh" > "$tmp/$name-bootstrap.log"
     launcher="$HOME/.local/bin/openviking-service-launcher"
