@@ -12,7 +12,7 @@ root="$(cd -- "$(dirname -- "$0")/.." && pwd)"
 version="$(cat "$root/OPENVIKING_VERSION")"
 [ -n "$version" ] || fail "OPENVIKING_VERSION is empty."
 printf 'Installing OpenViking %s with Python 3.13 via uv...\n' "$version"
-uv tool install --python 3.13 "openviking==$version"
+uv tool install --upgrade --python 3.13 "openviking==$version"
 [ -x "$HOME/.local/bin/openviking-server" ] || fail "Expected ~/.local/bin/openviking-server; inspect uv tool dir --bin."
 
 mkdir -p "$HOME/.openviking" "$HOME/.config/systemd/user"
