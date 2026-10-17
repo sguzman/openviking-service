@@ -14,7 +14,17 @@ root="$(cd -- "$(dirname -- "$0")/.." && pwd)"
 version="$(cat "$root/OPENVIKING_VERSION")"
 [ -n "$version" ] || fail "OPENVIKING_VERSION is empty."
 printf 'Installing OpenViking %s with Python 3.13 via uv...\n' "$version"
-uv tool install --upgrade --python 3.13 "openviking==$version"
+# Install the declared CPU embedding extra before entering the upstream wizard.
+# The wizard assumes pip exists inside the uv tool env, which it normally does not.
+# Prefer upstream's prebuilt CPU wheel to avoid a long local C++ compilation.
+uv tool install --upgrade --python 3.13 \
+    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu \
+    --no-build-package llama-cpp-python \
+    "openviking[local-embed]==$version"
+# Fail explicitly if the runtime cannot import its CPU embedding dependency.
+tool_python="$(uv tool dir)/openviking/bin/python"
+[ -x "$tool_python" ] || fail "Cannot find OpenViking's isolated Python: $tool_python"
+"$tool_python" -c 'from llama_cpp import Llama' || fail "Local CPU embedding dependency is not importable."
 
 # Use uv's effective bin directory, not ~/.local/bin, for the upstream executable.
 # UV_TOOL_BIN_DIR is allowed and may contain whitespace.
